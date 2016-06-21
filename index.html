@@ -1,3 +1,211 @@
-# test
+ <!DOCTYPE html>
+  <html>
+    <head>
+      <!--Import Google Icon Font-->
+  <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/css/materialize.min.css">
 
-hello welcome
+  <!-- Compiled and minified JavaScript -->
+  
+          
+      <!--Let browser know website is optimized for mobile-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   </head>
+
+    <body>
+    
+ <?php   
+   
+ include ('db_config.php');
+  //include ('header.php');
+   $l_UR_Type= $_SESSION['g_UR_Type'];
+ $l_UR_id = $_SESSION['g_UR_id'];
+
+$queryJobid=  mysql_fetch_row(mysql_query('SELECT max(JB_id) FROM Jobs'));
+$maxjobid=$queryJobid[0]+1;
+ 
+ function get_cities()
+ {
+  $query="SELECT cityID ,cityName FROM Cities WHERE countryID='IND' ORDER BY cityName ASC ";
+  $runquery=  mysql_query($query);
+  $namecity= array();
+  while($row=  mysql_fetch_row($runquery))
+      {
+      array_push($namecity,$row);
+      }
+  return $namecity;
+  }
+  
+  function get_skills()
+ {
+  $query2="SELECT SD_Name ,SD_id FROM SubDomain ORDER BY SD_id ASC ";
+  $runquery2=  mysql_query($query2);
+  $nameskill= array();
+  while($row=  mysql_fetch_row($runquery2))
+      {
+      array_push($nameskill,$row);
+      }
+  return $nameskill;
+  }
+ 
+ if(isset($_POST['submit']))
+{
+  $Job_Title = $_POST['Job_Title'];
+   $Job_Desc = $_POST['Job_Desc'];
+  $Job_Req = $_POST['Job_Req'];
+ $cities = $_POST['cities'];   
+   $skill= $_POST['skills'];
+$jobstatus='P';
+   $originalDate = $_POST['date'];;
+ $newDate = date("Ymd", strtotime($originalDate));
+if($newDate==""){
+    $error1="<h6 >please select Date</h6>";
+    $flag=123;
+    
+}
+if($cities=="") {
+      $error2="please select atleast one Location";  
+      $flag=123;
+} 
+if($skill==""){
+         $error3="please select atleaset one skill";
+         $flag=123;
+        }
+if($flag!=123)
+{
+$sql = 'INSERT INTO Jobs (JB_Title, JB_Desc, JB_Requirement,JB_Posting_Date,UR_id,JB_Status) VALUES ("'.$Job_Title.'","'.$Job_Desc.'","'.$Job_Req.'","'.$newDate.'","'.$l_UR_id.'","'.$jobstatus.'")';
+$result = mysql_query($sql);
+
+foreach($cities as $cityid)
+    {
+    $querycity="insert into Job_Location(JB_id,cityID) values (".$maxjobid.",".$cityid[0].")";
+ mysql_query($querycity);
+     }
+  
+foreach($skill as $skillid)
+    {
+$queryskill="insert into Job_Skills(JB_id,SD_id) values (".$maxjobid.",".$skillid[0].")";
+ mysql_query($queryskill);
+     }   
+if($result)
+{ ?>
+ <script>Materialize.toast('I am a toast!', 3000, 'rounded');</script>
+ <?php 
+}
+}  
+}
+?>
+   <br><br>
+<div class="container ">
+    
+      <div class="row">
+         <form class="col s12 offset-s2 "  action="" method="POST"  enctype="multipart/form-data">
+<div class="row">
+ <div class="input-field col s12">
+  <i class="material-icons prefix">view_module</i>
+  <input placeholder="Job Title" value="" id="name" name="Job_Title" type="text" class="active validate " required>
+  <label for="text" data-error="wrong" data-success="Success">Job Title</label>
+ </div>
+</div>
+
+<div class="row">
+ <div class="input-field col s12">
+<i class="material-icons prefix">payment</i>
+ <input placeholder="Job Description" value="" id="name" type="text" name="Job_Desc" class="active validate" required>
+<label for="text" data-error="wrong" data-success="Success">Job Description </label>
+</div>
+</div>
+ 
+             
+<div class="row">
+ <div class="input-field col s12">
+<i class="material-icons prefix">surround_sound</i>
+ <input placeholder="Job Requirement" value="" id="name" type="text" name="Job_Req" class="active validate" required>
+<label for="text" data-error="wrong" data-success="Success">Job Requirement</label>
+</div>
+</div> 
+             
+<div class="row">
+ <div class="input-field col s12">
+<i class="material-icons prefix">perm_contact_calendar</i>
+<input name="date" type="date" class="datepicker " required>
+<label for="date" data-error="wrong" data-success="Success">Job Posting Date <h6 style="color:red;"><?php echo $error1; ?></h6></label>
+</div>
+</div> 
+  
+ <div class="row">            
+ <div class="input-field col s12">
+     <i class="material-icons prefix">place</i>
+<select  name="cities[]" multiple class="active validate" required>
+      <option  value="" disabled selected>Select Cities</option>    
+ <?php echo get_cities(); foreach(get_cities() as $value){?>
+    
+      <option value="<?php echo $value[0]; ?>"><?php echo $value[1]; ?></option>
+  
+     <?Php }?> 
+</select>
+    <label data-error="wrong" data-success="Success">Job Locations <span style="color:red;"><?php echo $error2; ?></span></label>
+  </div>
+ </div>
+
+ <div class="row">            
+ <div class="input-field col s12">
+     <i class="material-icons prefix">playlist_add</i>
+<select  name="skills[]" multiple class="active validate" required>
+      <option  value="" disabled selected>Select Skills</option>    
+ <?php foreach(get_skills() as $value){?>
+    
+      <option value="<?php echo $value[1]; ?>"><?php echo $value[0]; ?></option>
+  
+     <?Php }?> 
+</select>
+    <label data-error="wrong" data-success="Success">Job Skills <span style="color:red;"><?php echo $error3; ?></span></label>
+  </div>
+ </div>            
+<div class="row">
+    <div class="input-field col s12">
+          <button class="btn waves-effect waves-light" type="submit" name="submit">Submit
+          <i class="material-icons right">send</i>
+  </button>              
+    </div>
+  </div>
+</div>    
+            
+ 
+         </form>       
+       </div> </div>
+  <div><?php include('footer.php'); ?><div>
+</main>
+     <!--Import jQuery before materialize.js-->
+     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
+     <script>
+      $(".button-collapse").sideNav();
+      $('.button-collapse').sideNav({
+      menuWidth:200, // Default is 240
+      edge: 'left', // Choose the horizontal origin
+      closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
+    }
+  );
+         // Show sideNav
+  //$('.button-collapse').sideNav('show');
+  // Hide sideNav
+  $('.button-collapse').sideNav('hide');
+$(document).ready(function() {
+$('select').material_select();
+});
+
+$('.datepicker').pickadate({
+    selectMonths: true, // Creates a dropdown to control month
+    selectYears: 15 // Creates a dropdown of 15 years to control year
+  });
+   $(document).ready(function() {
+    $('select').material_select();
+  });    
+     </script>
+    </body>
+  </html>
+</html>
+
+<?php include('footer.php'); ?>
+    
